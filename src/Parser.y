@@ -133,12 +133,14 @@ lexNum cs = TokenInt (read num) : lexer rest
 
 lexExp cs =
   case span isAlpha cs of
-    ("if", rest) -> TokenIf : lexer rest
-    ("let", rest) -> TokenLet : lexer rest
-    ("while", rest) -> TokenWhile : lexer rest
-    ("t", rest) -> TokenTrue : lexer rest
-    ("f", rest) -> TokenFalse : lexer rest
-    (var, rest) -> TokenVar var : lexer rest
+  ("if", rest) -> TokenIf : lexer rest
+  ("let", rest) -> TokenLet : lexer rest
+  ("while", rest) -> TokenWhile : lexer rest
+  ("t", rest) -> TokenTrue : lexer rest
+  ("f", rest) -> TokenFalse : lexer rest
+  ("set", rest) -> TokenSet : lexer rest
+  ("begin", rest) -> TokenBegin : lexer rest 
+  (var, rest) -> TokenVar var : lexer rest
 
 main = getContents >>= print . parseExp . lexer
 }
