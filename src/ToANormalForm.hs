@@ -46,8 +46,10 @@ toanf (Int x) counter =
   AExp (AInt x)
 
 toanf (Bool x) counter =
-  AExp (ABool x) 
+  AExp (ABool x)
+  
 tocomplex :: Exp -> ComplexExp
+
 tocomplex (Less (Int a) (Int b)) =
   CLess (AInt a) (AInt b)
 
