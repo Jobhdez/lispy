@@ -14,12 +14,12 @@ data ComplexExp =
   CIf AtomicExp AnfExp AnfExp
   | CSet Exp AnfExp
   | CLess AtomicExp AtomicExp deriving Show
-
 data AnfExp =
   AExp AtomicExp
   | CExp ComplexExp
   | CLet [(String, AnfExp)] AnfExp deriving Show
 
+  
 toanf :: Exp -> Int -> AnfExp
 toanf (If (Bool x) thn els) counter =
   CExp (CIf (ABool x) (toanf thn counter) (toanf els counter))
@@ -47,6 +47,9 @@ toanf (Int x) counter =
 
 toanf (Bool x) counter =
   AExp (ABool x)
+
+toanf (Let [(Var x, Int y)] (Int z)) counter =
+  (CLet [(x, AExp (AInt y))] (AExp (AInt z)))
   
 tocomplex :: Exp -> AnfExp
 
