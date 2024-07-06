@@ -28,9 +28,11 @@ toanf (If (Bool x) thn els) counter =
 
 toanf (If (Var x) thn els) counter =
   CExp (CIf (AVar x) (toanf thn counter) (toanf els counter))
+  
 toanf (If (Less a b) thn els) counter =
   let tempName = AVar ("temp_" ++ show counter) in
     CLet [(tempName, tocomplex (Less a b))] (toanf (If (Var ("temp_" ++ show counter)) thn els) (counter + 1))
+    
 toanf (If (If (Bool cnd) thn els) thn2 els2) counter =
   let tempName = AVar ("temp_" ++ show counter) in
     CLet [(tempName, CExp (CIf (ABool cnd) (toanf thn counter) (toanf els counter)))] (toanf (If (Var ("temp_" ++ show counter)) thn2 els2) (counter + 1))
@@ -73,10 +75,19 @@ toanf (Plus (Var v) (Var v2)) counter =
 
 toanf (Let [(Var x, Int y)] (Let [(Var v, Int z)] body)) counter =
   CLet [(AVar x, AExp (AInt y))] (CLet [(AVar v, AExp (AInt z))] (toanf body counter))
+
+toanf (Let [(Var v, Int x)] body) counter =
+  (CLet [(AVar v, AExp (AInt x))] (toanf body counter))
+  
+toanf exp counter =
+  toanf exp counter
   
 tocomplex :: Exp -> AnfExp
 tocomplex (Less (Int a) (Int b)) =
  CExp (CLess (AInt a) (AInt b))
+
+tocomplex (Less (Var a) (Int b)) =
+ CExp (CLess (AVar a) (AInt b))
 
 tocomplex (Plus (Int a) (Int b)) =
   CExp (CPlus (AInt a) (AInt b))
@@ -86,4 +97,5 @@ tocomplex (Plus (Var a) (Int b)) =
 
 tocomplex (Plus (Var v) (Var v2)) =
   CExp (CPlus (AVar v) (AVar v2))
+  
 tocomplex _ = error "tocomplex: unsupported expression"
