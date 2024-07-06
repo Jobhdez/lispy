@@ -29,7 +29,9 @@ toanf (If (Int x) thn els) counter =
 
 toanf (If (Var x) thn els) counter =
   CExp (CIf (AVar x) (toanf thn counter) (toanf els counter))
-
+toanf (If (Less a b) thn els) counter =
+  let tempName = "temp_" ++ show counter in
+    CLet [(tempName, tocomplex (Less a b))] (toanf (If (Var tempName) thn els) (counter + 1))
 toanf (If (If (Bool cnd) thn els) thn2 els2) counter =
   let tempName = "temp_" ++ show counter in
     CLet [(tempName, CExp (CIf (ABool cnd) (toanf thn counter) (toanf els counter)))] (toanf (If (Var tempName) thn2 els2) (counter + 1))
@@ -41,7 +43,7 @@ toanf (If (If cnd thn els) thn2 els2) counter =
         case cnd of
           (If (Bool b) thn3 els3) -> CLet [(tempName, CExp (CIf (ABool b) (toanf thn3 (counter+2)) (toanf els3 (counter+2))))] (CLet [(tempName2, CExp (CIf (AVar tempName) (toanf thn (counter+3)) (toanf els (counter+3))))] (toanf (If (Var tempName2) thn2 els2) (counter + 4)))
           (If (Less a b) thn3 els3) -> CLet [(tempName, (tocomplex (Less a b)))] (CLet [(tempName2, CExp (CIf (AVar tempName) (toanf thn3 (counter + 2)) (toanf els3 (counter+2))))]  (CLet [(tempName3, CExp (CIf (AVar tempName2) (toanf thn (counter + 3)) (toanf els (counter + 3))))] (toanf (If (Var tempName3) thn2 els2) (counter + 4))))
-          
+   
 toanf (Int x) counter =
   AExp (AInt x)
 
@@ -53,8 +55,15 @@ toanf (Let [(Var x, Int y)] (Int z)) counter =
 
 toanf (Let [(Var x, Var y)] (Int z)) counter =
   CLet [(x, AExp (AVar y))] (AExp (AInt z))
-tocomplex :: Exp -> AnfExp
 
+toanf (Let [(Var x, If (Bool b) thn els)] body) counter =
+  CLet [(x, CExp (CIf (ABool b) (toanf thn counter) (toanf els counter)))] (toanf body counter)
+
+toanf (Let [(Var x, If (Less a b) thn els)] body) counter =
+  let tempName = "temp_" ++ show counter in
+    CLet [(tempName, (tocomplex (Less a b)))] (CLet [(x, CExp (CIf (AVar tempName) (toanf thn (counter + 1)) (toanf els (counter + 1))))] (toanf body (counter + 1)))
+  
+tocomplex :: Exp -> AnfExp
 tocomplex (Less (Int a) (Int b)) =
  CExp (CLess (AInt a) (AInt b))
 
