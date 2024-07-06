@@ -24,9 +24,6 @@ toanf :: Exp -> Int -> AnfExp
 toanf (If (Bool x) thn els) counter =
   CExp (CIf (ABool x) (toanf thn counter) (toanf els counter))
 
-toanf (If (Int x) thn els) counter =
-  CExp (CIf (AInt x) (toanf thn counter) (toanf els counter))
-
 toanf (If (Var x) thn els) counter =
   CExp (CIf (AVar x) (toanf thn counter) (toanf els counter))
 toanf (If (Less a b) thn els) counter =
