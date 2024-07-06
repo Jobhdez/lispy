@@ -50,7 +50,9 @@ toanf (Bool x) counter =
 
 toanf (Let [(Var x, Int y)] (Int z)) counter =
   (CLet [(x, AExp (AInt y))] (AExp (AInt z)))
-  
+
+toanf (Let [(Var x, Var y)] (Int z)) counter =
+  CLet [(x, AExp (AVar y))] (AExp (AInt z))
 tocomplex :: Exp -> AnfExp
 
 tocomplex (Less (Int a) (Int b)) =
