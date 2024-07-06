@@ -66,6 +66,12 @@ toanf (Let [(Var x, (Let [(Var v, Int e)] body))] body2) counter =
 
 toanf (Plus (Var v) (Int x)) counter =
   CExp (CPlus (AVar v) (AInt x))
+
+toanf (Plus (Var v) (Var v2)) counter =
+  CExp (CPlus (AVar v) (AVar v2))
+
+toanf (Let [(Var x, Int y)] (Let [(Var v, Int z)] body)) counter =
+  CLet [(x, AExp (AInt y))] (CLet [(v, AExp (AInt z))] (toanf body counter))
   
 tocomplex :: Exp -> AnfExp
 tocomplex (Less (Int a) (Int b)) =
@@ -76,5 +82,7 @@ tocomplex (Plus (Int a) (Int b)) =
 
 tocomplex (Plus (Var a) (Int b)) =
   CExp (CPlus (AVar a) (AInt b))
-  
+
+tocomplex (Plus (Var v) (Var v2)) =
+  CExp (CPlus (AVar v) (AVar v2))
 tocomplex _ = error "tocomplex: unsupported expression"
