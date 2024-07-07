@@ -45,7 +45,12 @@ toanf (If (If cnd thn els) thn2 els2) counter =
         case cnd of
           (If (Bool b) thn3 els3) -> CLet [(tempName, CExp (CIf (ABool b) (toanf thn3 (counter+2)) (toanf els3 (counter+2))))] (CLet [(tempName2, CExp (CIf (AVar ("temp_" ++ show counter)) (toanf thn (counter+3)) (toanf els (counter+3))))] (toanf (If (Var ("temp_" ++ show (counter + 1))) thn2 els2) (counter + 4)))
           (If (Less a b) thn3 els3) -> CLet [(tempName, (tocomplex (Less a b)))] (CLet [(tempName2, CExp (CIf (AVar ("temp_" ++ show counter)) (toanf thn3 (counter + 2)) (toanf els3 (counter+2))))]  (CLet [(tempName3, CExp (CIf (AVar ("temp_" ++ show (counter + 1))) (toanf thn (counter + 3)) (toanf els (counter + 3))))] (toanf (If (Var ("temp_" ++ show (counter + 2))) thn2 els2) (counter + 4))))
-   
+          (If cnd2 thn4 els4) -> (CLet [(tempName, (toanf cnd2 (counter+1)))] (toanf (If (Var ("temp_" ++ show counter)) thn4 els4) (counter+1)))
+
+toanf (If cnd thn els) counter =
+  let tempName = "temp_" ++ show counter in
+    CLet [(AVar tempName, (toanf cnd (counter+1)))] (toanf (If (Var tempName) thn els) (counter+1))
+    
 toanf (Int x) counter =
   AExp (AInt x)
 
