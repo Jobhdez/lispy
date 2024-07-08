@@ -16,6 +16,9 @@ data MonExp =
   | MMinus AtomicExp AtomicExp
   | MEq AtomicExp AtomicExp
   | MNegative AtomicExp
+  | MSetBang AtomicExp MonExp
+  | MBegin [MonExp]
+  | MWhileLoop MonExp MonExp
   | Void String
   | MLet [(AtomicExp, MonExp)] MonExp deriving Show
 
@@ -114,11 +117,24 @@ toanf exp =
         bindingsToAnf :: [(Exp, Exp)] -> Int -> [(AtomicExp, MonExp)]
         bindingsToAnf [] _ = []
         bindingsToAnf ((v, e):xs) counter =
-          (toatomic v, toanf' e counter): rest
+          (toatomic v, toanf' e (counter+1)): rest
           where
-            rest = bindingsToAnf xs (counter+1)
+            rest = bindingsToAnf xs (counter+2)
     toanf' (If cnd thn els) counter =
-      MIf (toanf' cnd counter) (toanf' thn counter) (toanf' els counter)
+      MIf (toanf' cnd (counter+1)) (toanf' thn (counter+1)) (toanf' els (counter+1))
+
+    toanf' (Set var exp) counter =
+      MSetBang (toatomic var) (toanf' exp (counter+1))
+
+    toanf' (Begin exps) counter =
+      MBegin (beginExpsToAnf exps (counter+1))
+      where
+        beginExpsToAnf :: [Exp] -> Int -> [MonExp]
+        beginExpsToAnf [] _ = []
+        beginExpsToAnf ((e:xs)) counter =
+          (toanf' e counter): rest
+          where
+            rest = beginExpsToAnf xs (counter+2)
             
 isatomic :: Exp -> Bool
 isatomic (Bool b) = True
