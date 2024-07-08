@@ -117,7 +117,8 @@ toanf exp =
           (toatomic v, toanf' e counter): rest
           where
             rest = bindingsToAnf xs (counter+1)
-      
+    toanf' (If cnd thn els) counter =
+      MIf (toanf' cnd counter) (toanf' thn counter) (toanf' els counter)
             
 isatomic :: Exp -> Bool
 isatomic (Bool b) = True
