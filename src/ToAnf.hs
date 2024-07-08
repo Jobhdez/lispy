@@ -135,6 +135,9 @@ toanf exp =
           (toanf' e counter): rest
           where
             rest = beginExpsToAnf xs (counter+2)
+
+    toanf' (While cnd exp) counter =
+      MWhileLoop (toanf' cnd (counter+1)) (toanf' exp (counter+1))
             
 isatomic :: Exp -> Bool
 isatomic (Bool b) = True
