@@ -120,6 +120,7 @@ toanf exp =
           (toatomic v, toanf' e (counter+1)): rest
           where
             rest = bindingsToAnf xs (counter+2)
+            
     toanf' (If (Bool b) thn els) counter =
       MIf (toanf' (Bool b) (counter+1)) (toanf' thn (counter+1)) (toanf' els (counter+1))
 
