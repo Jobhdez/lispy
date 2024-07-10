@@ -1,4 +1,4 @@
-module ToCIR where
+module ToCir where
 
 import Parser 
 import ToAnf
