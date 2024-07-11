@@ -126,8 +126,7 @@ toanf exp =
 
     toanf' (If (Less a b) thn els) counter =
       let tempName = AVar ("temp_" ++ show counter) in
-        --MLet [(tempName, toanf' (Less a b) (counter+1))]
-        (MIf (AExp tempName) (toanf' thn (counter+1)) (toanf' els (counter + 1)))
+        MLet [(tempName, toanf' (Less a b) (counter+1))] (MIf (AExp tempName) (toanf' thn (counter+1)) (toanf' els (counter + 1)))
 
     toanf' (If (If cnd thn els) thn' els') counter =
       let tempName = Var ("temp_" ++ show counter) in
