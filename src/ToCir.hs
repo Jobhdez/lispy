@@ -3,6 +3,7 @@ module ToCir where
 import Parser 
 import ToAnf
 import qualified Data.Map as Map
+
 data Goto = Goto String deriving Show
 
 data Cir =
