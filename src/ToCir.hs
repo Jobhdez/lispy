@@ -2,6 +2,8 @@ module ToCir where
 
 import Parser 
 import ToAnf
+import qualified Data.Map as Map
+data Goto = Goto String deriving Show
 
 data Cir =
   CInt Int
@@ -10,6 +12,7 @@ data Cir =
   | CReturn Cir
   | CLess Cir Cir
   | IfStmt Cir Cir Cir
+  | IfGoto Cir Goto Goto
   | Assign Cir Cir deriving Show
   
 tocir :: MonExp -> [Cir]
@@ -73,3 +76,35 @@ tocir' (x:xs) =
             (IfStmt cnd2 (Assign var2 thn2) (Assign var2 els2)) : (IfStmt cnd3 thn3 els3) : tocir' xs
           _ -> x : tocir' xs
     _ -> x : tocir' xs
+
+toc :: [Cir] -> ([Cir], Map.Map String [Cir])
+toc exps = toc' exps 0 Map.empty
+  where
+    toc' :: [Cir] -> Int -> Map.Map String [Cir] -> ([Cir], Map.Map String [Cir])
+    toc' [] _ blocks = ([], blocks)
+    
+    toc' ((IfStmt cnd thn els):xs) counter blocks =
+      let blockThn = "block_" ++ show counter
+          blockEls = "block_" ++ show (counter + 1)
+          gotoThn = Goto blockThn
+          gotoEls = Goto blockEls
+          blocks' = Map.insert blockThn [thn] blocks
+          blocks'' = Map.insert blockEls [els] blocks'
+          exp = IfGoto cnd (Goto blockThn) (Goto blockEls)
+          (restExps, finalBlocks) = toc' xs (counter + 2) blocks''
+      in (exp : restExps, finalBlocks)
+    
+    toc' ((Assign var (IfStmt cnd thn els)):xs) counter blocks =
+      let blockThn = "block_" ++ show counter
+          blockEls = "block_" ++ show (counter + 1)
+          gotoThn = Goto blockThn
+          gotoEls = Goto blockEls
+          blocks' = Map.insert blockThn [thn] blocks
+          blocks'' = Map.insert blockEls [els] blocks'
+          exp = IfGoto cnd (Goto blockThn) (Goto blockEls)
+          (restExps, finalBlocks) = toc' xs (counter + 2) blocks''
+      in (exp : restExps, finalBlocks)
+    
+    toc' (x:xs) counter blocks =
+      let (restExps, finalBlocks) = toc' xs counter blocks
+      in (x : restExps, finalBlocks)
