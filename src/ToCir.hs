@@ -19,6 +19,11 @@ data Cir =
   | IfGotoLoop Cir Goto
   | CWhileLoop Cir Cir deriving Show
 
+makeexplicit :: MonExp -> 2([Cir], Map.Map String [Cir])
+makeexplicit exp =
+  -- makes the order of execution explicit
+  toc (tocir' (tocir exp))
+  
 tocir :: MonExp -> [Cir]
 tocir (MLet [(AVar var, AExp (AInt x))] (AExp (AInt y))) =
   [Assign (CVar var) (CInt x), CReturn (CInt y)]
