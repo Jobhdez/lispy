@@ -19,7 +19,7 @@ data Cir =
   | IfGotoLoop Cir Goto
   | CWhileLoop Cir Cir deriving Show
 
-makeexplicit :: MonExp -> 2([Cir], Map.Map String [Cir])
+makeexplicit :: MonExp -> ([Cir], Map.Map String [Cir])
 makeexplicit exp =
   -- makes the order of execution explicit
   toc (tocir' (tocir exp))
