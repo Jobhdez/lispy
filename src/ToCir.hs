@@ -14,8 +14,11 @@ data Cir =
   | CLess Cir Cir
   | IfStmt Cir Cir Cir
   | IfGoto Cir Goto Goto
-  | Assign Cir Cir deriving Show
-  
+  | Assign Cir Cir 
+  | CBegin [Cir]
+  | IfGotoLoop Cir Goto
+  | CWhileLoop Cir Cir deriving Show
+
 tocir :: MonExp -> [Cir]
 tocir (MLet [(AVar var, AExp (AInt x))] (AExp (AInt y))) =
   [Assign (CVar var) (CInt x), CReturn (CInt y)]
@@ -56,6 +59,20 @@ tocir (MIf (AExp (AVar tmp)) thn els) =
 tocir (AExp (AVar b)) =
   [CVar b]
 
+tocir (MBegin exps) =
+  [CBegin (mbeginToCir exps)]
+  where
+    mbeginToCir :: [MonExp] -> [Cir]
+    mbeginToCir [] = []
+    mbeginToCir (x:xs) =
+      (head (tocir x)) : mbeginToCir xs
+
+tocir (MSetBang (AVar var) exp) =
+  [(Assign (CVar var) (head (tocir exp)))]
+
+tocir (MWhileLoop cnd body) =
+  [CWhileLoop (head (tocir cnd)) (head (tocir body))]
+  
 tocir' :: [Cir] -> [Cir]
 tocir' [] = []
 tocir' (x:xs) =
@@ -105,7 +122,16 @@ toc exps = toc' exps 0 Map.empty
           exp = IfGoto cnd (Goto blockThn) (Goto blockEls)
           (restExps, finalBlocks) = toc' xs (counter + 2) blocks''
       in (exp : restExps, finalBlocks)
-    
-    toc' (x:xs) counter blocks =
+
+    toc' ((CBegin ((CWhileLoop cnd body):ys)):xs) counter blocks =
+      let blockLoop = "loop_" ++ show counter
+          blockBody = "block_" ++ show (counter + 1)
+          blocks' = Map.insert blockLoop [cnd] blocks
+          blocks'' = Map.insert blockLoop [body] blocks'
+          exp = IfGotoLoop cnd (Goto blockLoop)
+          (restExps, finalBlocks) = toc' xs (counter + 2) blocks''
+          in (exp : restExps, finalBlocks)
+             
+    toc' (x:xs) counter blocks = 
       let (restExps, finalBlocks) = toc' xs counter blocks
       in (x : restExps, finalBlocks)
