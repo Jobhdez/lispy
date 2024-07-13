@@ -24,3 +24,4 @@ data Instruction =
   | Callq String Int
   | Retq String
   | Cmpq Argument Argument
+  | Incq Argument
