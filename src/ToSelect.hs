@@ -5,6 +5,9 @@ import ToAnf
 import ToCir
 import qualified Data.Map as Map
 
+-- this module is the instruction selection module. It takes the Cir AST
+-- and selects the x86 instructions.
+
 data Argument =
     Immediate Int
   | Register String
