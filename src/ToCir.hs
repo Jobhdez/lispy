@@ -4,6 +4,8 @@ import Parser
 import ToAnf
 import qualified Data.Map as Map
 
+-- this module makes the ANF AST's order of execution explicit
+
 data Goto = Goto String deriving Show
 
 data Cir =
