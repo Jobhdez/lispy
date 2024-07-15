@@ -2,6 +2,9 @@ module ToAnf where
 
 import Parser
 
+-- takes the AST of a Scheme like language and turns it into ANF
+-- which seperates atomic expressions from complex expressions
+
 data AtomicExp = AInt Int | ABool Bool | AVar String deriving Show
 
 data MonExp =
