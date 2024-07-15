@@ -66,6 +66,6 @@ toselect ((x:xs), blocks) =
       let blk = Map.lookup block blocks
       in case blk of
            (Just blk') ->
-             Label (block ++ ":") : toselect (blk', blocks) ++ toselect ([cnd], blocks) ++ [Jmp block] ++ toselect (xs, blocks)
+             Label (block) : toselect (blk', blocks) ++ toselect ([cnd], blocks) ++ [Jmp block] ++ toselect (xs, blocks)
            _ -> error "Block not found"
     _ -> error "Unsupported CIR instruction"
