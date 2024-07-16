@@ -52,6 +52,9 @@ tocir (MLet [(AVar var, exp)] body) =
 tocir (MPlus (AVar a) (AVar b)) =
   [CPlus (CVar a) (CVar b)]
 
+tocir (MPlus (AVar a) (AInt b)) =
+  [CPlus (CVar a) (CInt b)]
+
 tocir (MLess (AVar x) (AInt y)) =
   [CLess (CVar x) (CInt y)]
 
@@ -75,9 +78,6 @@ tocir (MOr (AVar x) (ABool y)) =
 
 tocir (MOr (ABool x) (ABool y)) =
   [COr (CBool x) (CBool y)]
-
-tocir (MPlus (AVar a) (AInt b)) =
-  [CPlus (CVar a) (CInt b)]
 
 tocir (AExp (AInt b)) =
   [CInt b]
