@@ -13,6 +13,7 @@ data Cir =
   | CVar String
   | CBool Bool
   | CPlus Cir Cir
+  | CMinus Cir Cir
   | CReturn Cir
   | CLess Cir Cir
   | CGreater Cir Cir
@@ -55,6 +56,12 @@ tocir (MPlus (AVar a) (AVar b)) =
 tocir (MPlus (AVar a) (AInt b)) =
   [CPlus (CVar a) (CInt b)]
 
+tocir (MMinus (AVar a) (AVar b)) =
+  [CMinus (CVar a) (CVar b)]
+
+tocir (MMinus (AVar a) (AInt b)) =
+  [CMinus (CVar a) (CInt b)]
+  
 tocir (MLess (AVar x) (AInt y)) =
   [CLess (CVar x) (CInt y)]
 
