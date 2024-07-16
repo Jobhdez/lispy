@@ -11,10 +11,12 @@ data Goto = Goto String deriving Show
 data Cir =
   CInt Int
   | CVar String
+  | CBool Bool
   | CPlus Cir Cir
   | CReturn Cir
   | CLess Cir Cir
   | CGreater Cir Cir
+  | CAnd Cir Cir
   | IfStmt Cir Cir Cir
   | IfGoto Cir Goto Goto
   | Assign Cir Cir 
@@ -60,6 +62,12 @@ tocir (MGreater (AVar x) (AInt y)) =
 
 tocir (MGreater (AInt x) (AInt y)) =
   [CGreater (CInt x) (CInt y)]
+
+tocir (MAnd (AVar x) (ABool y)) =
+  [CAnd (CVar x) (CBool y)]
+
+tocir (MAnd (ABool x) (ABool y)) =
+  [CAnd (CBool x) (CBool y)]
 
 tocir (MPlus (AVar a) (AInt b)) =
   [CPlus (CVar a) (CInt b)]
