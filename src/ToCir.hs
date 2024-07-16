@@ -17,6 +17,7 @@ data Cir =
   | CLess Cir Cir
   | CGreater Cir Cir
   | CAnd Cir Cir
+  | COr Cir Cir
   | IfStmt Cir Cir Cir
   | IfGoto Cir Goto Goto
   | Assign Cir Cir 
@@ -68,6 +69,12 @@ tocir (MAnd (AVar x) (ABool y)) =
 
 tocir (MAnd (ABool x) (ABool y)) =
   [CAnd (CBool x) (CBool y)]
+
+tocir (MOr (AVar x) (ABool y)) =
+  [COr (CVar x) (CBool y)]
+
+tocir (MOr (ABool x) (ABool y)) =
+  [COr (CBool x) (CBool y)]
 
 tocir (MPlus (AVar a) (AInt b)) =
   [CPlus (CVar a) (CInt b)]
