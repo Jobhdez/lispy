@@ -14,6 +14,7 @@ data Cir =
   | CPlus Cir Cir
   | CReturn Cir
   | CLess Cir Cir
+  | CGreater Cir Cir
   | IfStmt Cir Cir Cir
   | IfGoto Cir Goto Goto
   | Assign Cir Cir 
@@ -53,6 +54,12 @@ tocir (MLess (AVar x) (AInt y)) =
 
 tocir (MLess (AInt x) (AInt y)) =
   [CLess (CInt x) (CInt y)]
+
+tocir (MGreater (AVar x) (AInt y)) =
+  [CGreater (CVar x) (CInt y)]
+
+tocir (MGreater (AInt x) (AInt y)) =
+  [CGreater (CInt x) (CInt y)]
 
 tocir (MPlus (AVar a) (AInt b)) =
   [CPlus (CVar a) (CInt b)]
