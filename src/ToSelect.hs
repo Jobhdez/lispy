@@ -27,7 +27,9 @@ data Instruction =
   | Cmpq Argument Argument
   | Incq Argument
   | Setg Argument
-  | Movzbl Argument Argument
+  | Setl Argument
+  | Sete Argument
+  | Movzbq Argument Argument
   | Label String
   deriving Show
 
@@ -42,7 +44,7 @@ toselect ((x:xs), blocks) =
       Addq (MemoryRef var) (MemoryRef var') : toselect (xs, blocks)
     -- todo: cminus  
     Assign (CVar var) (CLess (CInt a) (CInt b)) ->
-      Cmpq (Immediate b) (Immediate a) : Setg (Register "%al") : Movzbl (Register "%al") (MemoryRef var) : toselect (xs, blocks)
+      Cmpq (Immediate a) (Immediate b) : Setl (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
       
     CLess (CVar var) (CInt n) ->
       Cmpq (Immediate n) (MemoryRef var) : toselect (xs, blocks)
