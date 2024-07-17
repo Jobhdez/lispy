@@ -42,6 +42,13 @@ toanf exp =
     toanf' (Negative a) _ =
       MNegative (AInt a)
 
+    toanf' (Not n) counter =
+      if isatomic n
+      then MNot (toatomic n)
+      else
+        let tempName = AVar ("temp_" ++ (show counter)) in
+          MLet [(tempName, toanf' n (counter+1))] (MNot tempName)
+          
     toanf' (Less a b) counter =
       let tempName = AVar ("temp_" ++ (show counter)) in
         if isatomic a && isatomic b
