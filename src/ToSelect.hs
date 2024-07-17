@@ -22,6 +22,7 @@ data Instruction =
   | Pushq Argument
   | Popq Argument
   | Jmp String
+  | Je String
   | Callq String Int
   | Retq
   | Cmpq Argument Argument
@@ -66,7 +67,7 @@ toselect ((x:xs), blocks) =
           blk' = Map.lookup block' blocks
       in case (blk, blk') of
           (Just blkInstrs, Just blk'Instrs) ->
-            Cmpq (Immediate 1) (MemoryRef var) : Jmp block : Label block : toselect (blkInstrs, blocks) ++ [Jmp block'] ++ Label block' : toselect (blk'Instrs, blocks) ++ toselect (xs, blocks)
+            Cmpq (Immediate 1) (MemoryRef var) : Je block : Jmp block' : Label block : toselect (blkInstrs, blocks) ++  [Label block'] ++ toselect (blk'Instrs, blocks) ++ toselect (xs, blocks)
           _ -> error "Block not found"
           
     CInt n -> Movq (Immediate n) (Register "%rax") : toselect (xs, blocks)
