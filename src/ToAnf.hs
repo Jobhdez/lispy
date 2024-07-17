@@ -13,8 +13,6 @@ data MonExp =
   | MNot AtomicExp
   | MLess AtomicExp AtomicExp
   | MGreater AtomicExp AtomicExp
-  | MAnd AtomicExp AtomicExp
-  | MOr AtomicExp AtomicExp
   | MPlus AtomicExp AtomicExp
   | MMinus AtomicExp AtomicExp
   | MEq AtomicExp AtomicExp
@@ -84,30 +82,6 @@ toanf exp =
             MLet [(tempName, toanf' b counter)] (MGreater (toatomic a) tempName)
           else
             MLet [(tempName, toanf' a counter)] (MGreater tempName (toatomic b))
-            
-    toanf' (And a b) counter =
-      let tempName = AVar ("temp_" ++ show counter) in
-        if isatomic a && isatomic b
-        then
-          (MAnd (toatomic a) (toatomic b))
-        else
-          if isatomic a
-          then
-            MLet [(tempName, toanf' b counter)] (MAnd (toatomic a) tempName)
-          else
-            MLet [(tempName, toanf' a counter)] (MAnd tempName (toatomic b))
-            
-    toanf' (Or a b) counter =
-      let tempName = AVar ("temp_" ++ show counter) in
-        if isatomic a && isatomic b
-        then
-          (MOr (toatomic a) (toatomic b))
-        else
-          if isatomic a
-          then
-            MLet [(tempName, toanf' b counter)] (MOr (toatomic a) tempName)
-          else
-            MLet [(tempName, toanf' a counter)] (MOr tempName (toatomic b))
             
     toanf' (Plus a b) counter =
       let tempName = AVar ("temp_" ++ show counter) in

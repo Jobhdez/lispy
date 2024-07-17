@@ -18,8 +18,6 @@ data Cir =
   | CLess Cir Cir
   | CEq Cir Cir
   | CGreater Cir Cir
-  | CAnd Cir Cir
-  | COr Cir Cir
   | CNot Cir
   | IfStmt Cir Cir Cir
   | IfGoto Cir Goto Goto
@@ -76,23 +74,11 @@ tocir (MGreater (AVar x) (AInt y)) =
 tocir (MGreater (AInt x) (AInt y)) =
   [CGreater (CInt x) (CInt y)]
 
-tocir (MAnd (AVar x) (ABool y)) =
-  [CAnd (CVar x) (CBool y)]
-
-tocir (MAnd (ABool x) (ABool y)) =
-  [CAnd (CBool x) (CBool y)]
-
 tocir (MEq (AVar x) (ABool y)) =
   [CEq (CVar x) (CBool y)]
 
 tocir (MEq (ABool x) (ABool y)) =
   [CEq (CBool x) (CBool y)]
-
-tocir (MOr (AVar x) (ABool y)) =
-  [COr (CVar x) (CBool y)]
-
-tocir (MOr (ABool x) (ABool y)) =
-  [COr (CBool x) (CBool y)]
 
 tocir (AExp (AInt b)) =
   [CInt b]
