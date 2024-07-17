@@ -16,6 +16,7 @@ data Cir =
   | CMinus Cir Cir
   | CReturn Cir
   | CLess Cir Cir
+  | CEq Cir Cir
   | CGreater Cir Cir
   | CAnd Cir Cir
   | COr Cir Cir
@@ -46,9 +47,9 @@ tocir (MLet [(AVar var, MLess (AVar x) (AInt y))] body) =
 
 tocir (MLet [(AVar var, MLess (AInt y) (AInt z))] body) =
   [Assign (CVar var) (head (tocir (MLess (AInt y) (AInt z))))] ++ tocir body
-  
+
 tocir (MLet [(AVar var, exp)] body) =
-  tocir exp ++ tocir body
+  [Assign (CVar var) (head (tocir exp))] ++ tocir body
 
 tocir (MPlus (AVar a) (AVar b)) =
   [CPlus (CVar a) (CVar b)]
@@ -79,6 +80,12 @@ tocir (MAnd (AVar x) (ABool y)) =
 
 tocir (MAnd (ABool x) (ABool y)) =
   [CAnd (CBool x) (CBool y)]
+
+tocir (MEq (AVar x) (ABool y)) =
+  [CEq (CVar x) (CBool y)]
+
+tocir (MEq (ABool x) (ABool y)) =
+  [CEq (CBool x) (CBool y)]
 
 tocir (MOr (AVar x) (ABool y)) =
   [COr (CVar x) (CBool y)]
