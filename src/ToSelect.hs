@@ -1,6 +1,7 @@
 module ToSelect where
 
 import Parser
+import Desugar
 import ToAnf
 import ToCir
 import qualified Data.Map as Map
@@ -53,6 +54,9 @@ toselect ((x:xs), blocks) =
       
     Assign (CVar var) (CEq (CInt a) (CInt b)) ->
       Cmpq (Immediate a) (Immediate b) : Sete (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
+
+    Assign (CVar var) (CEq (CVar a) (CVar b)) ->
+      Cmpq (MemoryRef a) (MemoryRef b) : Sete (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
 
     Assign (CVar var) (CNot n) ->
 
