@@ -20,6 +20,7 @@ data Cir =
   | CGreater Cir Cir
   | CAnd Cir Cir
   | COr Cir Cir
+  | CNot Cir
   | IfStmt Cir Cir Cir
   | IfGoto Cir Goto Goto
   | Assign Cir Cir 
@@ -115,6 +116,12 @@ tocir (MSetBang (AVar var) exp) =
 
 tocir (MWhileLoop cnd body) =
   [CWhileLoop (head (tocir cnd)) (head (tocir body))]
+
+tocir (MNot (AVar v)) =
+  [CNot (CVar v)]
+  
+tocir (MNot (ABool b)) =
+  [CNot (CBool b)]
   
 tocir' :: [Cir] -> [Cir]
 tocir' [] = []
