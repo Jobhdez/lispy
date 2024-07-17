@@ -32,6 +32,7 @@ data Instruction =
   | Sete Argument
   | Movzbq Argument Argument
   | Label String
+  | Xorq Argument Argument
   deriving Show
 
 toselect :: ([Cir], Map.Map String [Cir]) -> [Instruction]
@@ -52,10 +53,21 @@ toselect ((x:xs), blocks) =
       
     Assign (CVar var) (CEq (CInt a) (CInt b)) ->
       Cmpq (Immediate a) (Immediate b) : Sete (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
+
+    Assign (CVar var) (CNot n) ->
+
+      case n of
+        CVar nvar ->
+          Xorq  (Immediate 1) (MemoryRef var) : toselect (xs, blocks)
+        CInt i ->
+          Movq (Immediate i) (MemoryRef var) : Xorq (Immediate 1) (MemoryRef var) : toselect (xs, blocks)
+        CBool True ->
+          Movq (Immediate 1) (MemoryRef var) : Xorq (Immediate 1) (MemoryRef var) : toselect (xs, blocks)
+        _ -> Movq (Immediate 0) (MemoryRef var) : Xorq (Immediate 1) (MemoryRef var) : toselect (xs, blocks) 
       
     CLess (CVar var) (CInt n) ->
       Cmpq (Immediate n) (MemoryRef var) : toselect (xs, blocks)
-     --todo: cgreater, cand, cor, cnot, ceq
+     --todo: cgreater
     Assign (CVar var) (CPlus (CVar var') (CVar var'')) ->
       Movq (MemoryRef var') (MemoryRef var) : Addq (MemoryRef var'') (MemoryRef var) : toselect (xs, blocks)
       
@@ -71,6 +83,12 @@ toselect ((x:xs), blocks) =
           _ -> error "Block not found"
           
     CInt n -> Movq (Immediate n) (Register "%rax") : toselect (xs, blocks)
+
+    CBool b ->
+      if b == True
+      then Movq (Immediate 1) (Register "%rax") : toselect (xs, blocks)
+      else
+        Movq (Immediate 0) (Register "%rax") : toselect (xs, blocks)
     
     CBegin exps -> concatMap (\cirexp -> toselect ([cirexp], blocks)) exps ++ toselect (xs, blocks)
     
