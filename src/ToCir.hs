@@ -80,6 +80,16 @@ tocir (MEq (AVar x) (ABool y)) =
 tocir (MEq (ABool x) (ABool y)) =
   [CEq (CBool x) (CBool y)]
 
+tocir (MEq (AVar x) (AInt y)) =
+  [CEq (CVar x) (CInt y)]
+
+
+tocir (MEq (AInt x) (AInt y)) =
+  [CEq (CInt x) (CInt y)]
+
+tocir (MEq (AVar x) (AVar y)) =
+  [CEq (CVar x) (CVar y)]
+  
 tocir (AExp (AInt b)) =
   [CInt b]
 
