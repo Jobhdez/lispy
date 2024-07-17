@@ -60,6 +60,18 @@ toanf exp =
             MLet [(tempName, toanf' b counter)] (MLess (toatomic a) tempName)
           else
             MLet [(tempName, toanf' a counter)] (MLess tempName (toatomic b))
+
+    toanf' (Eq a b) counter =
+      let tempName = AVar ("temp_" ++ (show counter)) in
+        if isatomic a && isatomic b
+        then
+          (MEq (toatomic a) (toatomic b))
+        else
+          if isatomic a
+          then
+            MLet [(tempName, toanf' b counter)] (MEq (toatomic a) tempName)
+          else
+            MLet [(tempName, toanf' a counter)] (MEq tempName (toatomic b))
             
     toanf' (Greater a b) counter =
       let tempName = AVar ("temp_" ++ show counter) in
