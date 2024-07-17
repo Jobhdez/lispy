@@ -46,6 +46,9 @@ toselect ((x:xs), blocks) =
     Assign (CVar var) (CLess (CInt a) (CInt b)) ->
       Cmpq (Immediate a) (Immediate b) : Setl (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
       
+    Assign (CVar var) (CGreater (CInt a) (CInt b)) ->
+      Cmpq (Immediate a) (Immediate b) : Setg (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
+      
     CLess (CVar var) (CInt n) ->
       Cmpq (Immediate n) (MemoryRef var) : toselect (xs, blocks)
      --todo: cgreater, cand, cor, cnot, ceq
