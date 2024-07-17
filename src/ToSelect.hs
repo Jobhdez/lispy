@@ -40,13 +40,13 @@ toselect ((x:xs), blocks) =
       
     CPlus (CVar var) (CVar var') ->
       Addq (MemoryRef var) (MemoryRef var') : toselect (xs, blocks)
-      
+    -- todo: cminus  
     Assign (CVar var) (CLess (CInt a) (CInt b)) ->
       Cmpq (Immediate b) (Immediate a) : Setg (Register "%al") : Movzbl (Register "%al") (MemoryRef var) : toselect (xs, blocks)
       
     CLess (CVar var) (CInt n) ->
       Cmpq (Immediate n) (MemoryRef var) : toselect (xs, blocks)
-      
+     --todo: cgreater, cand, cor, cnot, ceq
     Assign (CVar var) (CPlus (CVar var') (CVar var'')) ->
       Movq (MemoryRef var') (MemoryRef var) : Addq (MemoryRef var'') (MemoryRef var) : toselect (xs, blocks)
       
