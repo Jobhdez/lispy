@@ -815,7 +815,8 @@ lexExp cs =
   ("f", rest) -> TokenFalse : lexer rest
   ("set", rest) -> TokenSet : lexer rest
   ("begin", rest) -> TokenBegin : lexer rest
-  ("eq", rest) -> TokenEq : lexer rest 
+  ("eq", rest) -> TokenEq : lexer rest
+  ("not", rest) -> TokenNot : lexer rest 
   (var, rest) -> TokenVar var : lexer rest
 
 main = getContents >>= print . parseExp . lexer
