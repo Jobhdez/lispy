@@ -117,19 +117,14 @@ toanf exp =
           where
             rest = bindingsToAnf xs (counter+2)
             
-    toanf' (If (Bool b) thn els) counter =
-      MIf (toanf' (Bool b) (counter+1)) (toanf' thn (counter+1)) (toanf' els (counter+1))
-
-    toanf' (If (Less a b) thn els) counter =
-      let tempName = AVar ("temp_" ++ show counter) in
-        MLet [(tempName, toanf' (Less a b) (counter+1))] (MIf (AExp tempName) (toanf' thn (counter+1)) (toanf' els (counter + 1)))
-
-    toanf' (If (If cnd thn els) thn' els') counter =
-      let tempName = Var ("temp_" ++ show counter) in
-        toanf' (Let [(tempName, (If cnd thn els))] (If tempName thn' els')) (counter + 1)
-
     toanf' (If cnd thn els) counter =
-      MIf (toanf' cnd counter) (toanf' thn counter) (toanf' els counter)
+      let cndanf = toanf' cnd counter in
+        case cndanf of
+          AExp (ABool b) -> MIf (AExp (ABool b))  (toanf' thn counter) (toanf' els counter)
+          AExp (AVar v)  -> MIf (AExp (AVar v))  (toanf' thn counter) (toanf' els counter)
+          _              ->
+            let tmpName = AVar ("temp_" ++ show counter) in
+              (MLet [(tmpName, (toanf' cnd (counter+1)))] (MIf (AExp tmpName) (toanf' thn (counter+1)) (toanf' els (counter+1))))
                           
     toanf' (Set var exp) counter =
       MSetBang (toatomic var) (toanf' exp (counter+1))
