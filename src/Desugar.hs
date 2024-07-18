@@ -2,6 +2,8 @@ module Desugar where
 
 import Parser
 
+-- this module, so far, desugars `And` and `Or`.
+
 desugar :: Exp -> Exp
 desugar (And a b) =
   (If a b (Bool False))
