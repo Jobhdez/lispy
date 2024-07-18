@@ -18,7 +18,7 @@ t             { TokenTrue }
 f             { TokenFalse }
 set           { TokenSet }
 begin         { TokenBegin }
-vectorref     { TokenTupleRef }
+vectorref     { TokenVecRef }
 vector        { TokenVector }
 vectorlength  { TokenVecLength }
 and           { TokenAnd }
@@ -74,7 +74,7 @@ data Token
   | TokenFalse
   | TokenSet
   | TokenBegin
-  | TokenTupleRef
+  | TokenVecRef
   | TokenVector
   | TokenVecLength
   | TokenAnd
@@ -111,7 +111,7 @@ data Exp
   | Int Int
   | Negative Int
   deriving (Show)
-
+  
 parseError :: [Token] -> a
 parseError _ = error "Parse error"
 
@@ -144,6 +144,9 @@ lexExp cs =
   ("not", rest) -> TokenNot : lexer rest
   ("and", rest) -> TokenAnd : lexer rest
   ("or", rest) -> TokenOr : lexer rest
+  ("vectorlength", rest) -> TokenVecLength : lexer rest
+  ("vectorref", rest) -> TokenVecRef : lexer rest
+  ("vector", rest) -> TokenVector : lexer rest 
   (var, rest) -> TokenVar var : lexer rest
 
 main = getContents >>= print . parseExp . lexer

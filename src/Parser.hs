@@ -691,7 +691,7 @@ happyNewToken action sts stk (tk:tks) =
 	TokenFalse -> cont 14;
 	TokenSet -> cont 15;
 	TokenBegin -> cont 16;
-	TokenTupleRef -> cont 17;
+	TokenVecRef -> cont 17;
 	TokenVector -> cont 18;
 	TokenVecLength -> cont 19;
 	TokenAnd -> cont 20;
@@ -749,7 +749,7 @@ data Token
   | TokenFalse
   | TokenSet
   | TokenBegin
-  | TokenTupleRef
+  | TokenVecRef
   | TokenVector
   | TokenVecLength
   | TokenAnd
@@ -787,6 +787,9 @@ data Exp
   | Negative Int
   deriving (Show)
 
+data Exps =
+  Exps [Exp]
+  
 parseError :: [Token] -> a
 parseError _ = error "Parse error"
 
@@ -819,6 +822,9 @@ lexExp cs =
   ("not", rest) -> TokenNot : lexer rest
   ("and", rest) -> TokenAnd : lexer rest
   ("or", rest) -> TokenOr : lexer rest
+  ("vectorlength", rest) -> TokenVecLength : lexer rest
+  ("vectorref", rest) -> TokenVecRef : lexer rest
+  ("vector", rest) -> TokenVector : lexer rest 
   (var, rest) -> TokenVar var : lexer rest
 
 main = getContents >>= print . parseExp . lexer
