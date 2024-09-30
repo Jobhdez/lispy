@@ -26,6 +26,10 @@ data Cir =
   | IfGotoLoop Cir Goto
   | CWhileLoop Cir Cir deriving Show
 
+mk :: String -> ([Cir], Map.Map String [Cir])
+mk exp =
+  makeexplicit (toanf (parseExp (lexer exp)))
+
 makeexplicit :: MonExp -> ([Cir], Map.Map String [Cir])
 makeexplicit exp =
   -- makes the order of execution explicit
@@ -56,20 +60,44 @@ tocir (MPlus (AVar a) (AVar b)) =
 tocir (MPlus (AVar a) (AInt b)) =
   [CPlus (CVar a) (CInt b)]
 
+tocir (MPlus (AInt a) (AVar b)) =
+  [CPlus (CInt a) (CVar b)]
+
+tocir (MPlus (AInt a) (AInt b)) =
+  [CPlus (CInt a) (CInt b)]
+  
 tocir (MMinus (AVar a) (AVar b)) =
   [CMinus (CVar a) (CVar b)]
 
 tocir (MMinus (AVar a) (AInt b)) =
   [CMinus (CVar a) (CInt b)]
-  
+
+tocir (MMinus (AInt a) (AVar b)) =
+  [CMinus (CInt a) (CVar b)]
+
+tocir (MMinus (AInt a) (AInt b)) =
+  [CMinus (CInt a) (CInt b)]
+
 tocir (MLess (AVar x) (AInt y)) =
   [CLess (CVar x) (CInt y)]
+
+tocir (MLess (AInt a) (AVar b)) =
+  [CLess (CInt a) (CVar b)]
 
 tocir (MLess (AInt x) (AInt y)) =
   [CLess (CInt x) (CInt y)]
 
-tocir (MGreater (AVar x) (AInt y)) =
-  [CGreater (CVar x) (CInt y)]
+tocir (MLess (AVar a) (AVar b)) =
+  [CLess (CVar a) (CVar b)]
+
+tocir (MGreater (AVar a) (AVar b)) =
+  [CGreater (CVar a) (CVar b)]
+
+tocir (MGreater (AVar a) (AInt b)) =
+  [CGreater (CVar a) (CInt b)]
+
+tocir (MGreater (AInt a) (AVar b)) =
+  [CGreater (CInt a) (CVar b)]
 
 tocir (MGreater (AInt x) (AInt y)) =
   [CGreater (CInt x) (CInt y)]
@@ -77,18 +105,23 @@ tocir (MGreater (AInt x) (AInt y)) =
 tocir (MEq (AVar x) (ABool y)) =
   [CEq (CVar x) (CBool y)]
 
+tocir (MEq (ABool x) (AVar y)) =
+  [CEq (CBool x) (CVar y)]
+
+tocir (MEq (AVar x) (AVar y)) =
+  [CEq (CVar x) (CVar y)]
+  
 tocir (MEq (ABool x) (ABool y)) =
   [CEq (CBool x) (CBool y)]
 
 tocir (MEq (AVar x) (AInt y)) =
   [CEq (CVar x) (CInt y)]
 
-
+tocir (MEq (AInt x) (AVar y)) =
+  [CEq (CInt x) (CVar y)]
+  
 tocir (MEq (AInt x) (AInt y)) =
   [CEq (CInt x) (CInt y)]
-
-tocir (MEq (AVar x) (AVar y)) =
-  [CEq (CVar x) (CVar y)]
   
 tocir (AExp (AInt b)) =
   [CInt b]
