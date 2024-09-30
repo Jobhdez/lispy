@@ -138,7 +138,7 @@ tocir (MBegin exps) =
     mbeginToCir :: [MonExp] -> [Cir]
     mbeginToCir [] = []
     mbeginToCir (x:xs) =
-      (head (tocir x)) : mbeginToCir xs
+      tocir x ++  mbeginToCir xs
 
 tocir (MSetBang (AVar var) exp) =
   [(Assign (CVar var) (head (tocir exp)))]
@@ -209,7 +209,7 @@ toc exps = toc' exps 0 Map.empty
           blocks'' = Map.insert blockLoop [body] blocks'
           exp = IfGotoLoop cnd (Goto blockLoop)
           (restExps, finalBlocks) = toc' xs (counter + 2) blocks''
-          in (exp : restExps, finalBlocks)
+          in (exp : ys ++ restExps, finalBlocks)
              
     toc' (x:xs) counter blocks = 
       let (restExps, finalBlocks) = toc' xs counter blocks
