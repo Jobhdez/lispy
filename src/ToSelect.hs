@@ -44,20 +44,156 @@ toselect ((x:xs), blocks) =
       Movq (Immediate n) (MemoryRef var) : toselect (xs, blocks)
       
     CPlus (CVar var) (CVar var') ->
-      Addq (MemoryRef var) (MemoryRef var') : toselect (xs, blocks)
+      Movq (MemoryRef var) (Register "%rax") : Addq (Register "%rax") (MemoryRef var') : toselect (xs, blocks)
+
+    CPlus (CVar var) (CInt e) ->
+      [Addq (Immediate e) (MemoryRef var)]
+
+    CPlus (CInt e) (CVar var) ->
+      [Addq (Immediate e) (MemoryRef var)]
+
+    CPlus (CInt e) (CInt e2) ->
+      Movq (Immediate e) (Register "%rax") : Addq (Immediate e2) (Register "%rax") : toselect (xs, blocks)
+
+    CMinus (CVar var) (CVar var') ->
+      Movq (MemoryRef var) (Register "%rax") : Subq (Register "%rax") (MemoryRef var') : toselect (xs, blocks)
+
+    CMinus (CVar var) (CInt e) ->
+      [Subq (Immediate e) (MemoryRef var)]
+
+    CMinus (CInt e) (CVar var) ->
+      [Subq (Immediate e) (MemoryRef var)]
+
+    CMinus (CInt e) (CInt e2) ->
+      Movq (Immediate e) (Register "%rax") : Subq (Immediate e2) (Register "%rax") : toselect (xs, blocks)
+
+    CLess (CVar var) (CVar var') ->
+      Movq (MemoryRef var') (Register "%rax") : (Cmpq (Register "%rax") (MemoryRef var)) : (Setl (Register "%al")): (Movzbq (Register "%al") (Register "%rax")) :  toselect (xs, blocks)
+
+    CLess (CVar var) (CInt e) ->
+      Cmpq (Immediate e) (MemoryRef var) : Setl (Register"%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+
+    CLess (CInt e) (CVar var) ->
+      Cmpq (MemoryRef var) (Immediate e) : Setl (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+
+    CLess (CInt e) (CInt e2) ->
+      Cmpq (Immediate e2) (Immediate e) : Setl (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+---
+    CGreater (CVar var) (CVar var') ->
+      Movq (MemoryRef var') (Register "%rax") : (Cmpq (Register "%rax") (MemoryRef var)) : (Setg (Register "%al")) : (Movzbq (Register "%al") (Register "%rax")) :  toselect (xs, blocks)
+
+    CGreater (CVar var) (CInt e) ->
+      Cmpq (Immediate e) (MemoryRef var) : Setg (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+
+    CGreater (CInt e) (CVar var) ->
+      Cmpq (MemoryRef var) (Immediate e) : Setg (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+
+    CGreater (CInt e) (CInt e2) ->
+      Cmpq (Immediate e2) (Immediate e) : Setg (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+---
+    CEq (CVar var) (CVar var') ->
+      Movq (MemoryRef var') (Register "%rax") : (Cmpq (Register "%rax") (MemoryRef var)) : (Sete (Register "%al")) : (Movzbq (Register "%al") (Register "%rax")) :  toselect (xs, blocks)
+
+    CEq (CVar var) (CInt e) ->
+      Cmpq (Immediate e) (MemoryRef var) : Sete (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+
+    CEq (CInt e) (CVar var) ->
+      Cmpq (MemoryRef var) (Immediate e) : Sete (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+
+    CEq (CInt e) (CInt e2) ->
+      Cmpq (Immediate e2) (Immediate e) : Sete (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+    
+    CEq (CVar var) (CBool e) ->
+      let bool = if e == True then 1 else 0 in
+        Cmpq (Immediate bool) (MemoryRef var) : Sete (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+
+    CEq (CBool e) (CVar var) ->
+      let bool = if e == True then 1 else 0 in
+        Cmpq (MemoryRef var) (Immediate bool) : Sete (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+
+    CEq (CBool e) (CBool b) ->
+      let bool1 = if e == True then 1 else 0 in
+        let bool2 = if b == True then 1 else 0 in
+          Cmpq (Immediate bool2) (Immediate bool1) : Sete (Register "%al") : (Movzbq (Register "%al") (Register "%rax")) : toselect (xs, blocks)
+      
     -- todo: cminus  
     Assign (CVar var) (CLess (CInt a) (CInt b)) ->
       Cmpq (Immediate a) (Immediate b) : Setl (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
+
+    Assign (CVar var) (CLess (CInt a) (CVar b)) ->
+       Cmpq (MemoryRef b) (Immediate a) : Setl (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+
+    Assign (CVar var) (CLess (CVar a) (CInt b)) ->
+       Cmpq (Immediate b) (MemoryRef a) : Setl (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+
+    Assign (CVar var) (CLess (CVar a) (CVar b)) ->
+      Movq (MemoryRef b) (Register "%rax") : (Cmpq (Register "%rax") (MemoryRef a)) : (Setl (Register "%al")): (Movzbq (Register "%al") (MemoryRef var)) :  toselect (xs, blocks)
       
+  ---
     Assign (CVar var) (CGreater (CInt a) (CInt b)) ->
       Cmpq (Immediate a) (Immediate b) : Setg (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
+
+    Assign (CVar var) (CGreater (CInt a) (CVar b)) ->
+       Cmpq (MemoryRef b) (Immediate a) : Setg (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+
+    Assign (CVar var) (CGreater (CVar a) (CInt b)) ->
+       Cmpq (Immediate b) (MemoryRef a) : Setg (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+
+    Assign (CVar var) (CGreater (CVar a) (CVar b)) ->
+      Movq (MemoryRef b) (Register "%rax") : (Cmpq (Register "%rax") (MemoryRef a)) : (Setg (Register "%al")): (Movzbq (Register "%al") (MemoryRef var)) :  toselect (xs, blocks)
+
+    Assign (CVar var) (CPlus (CInt a) (CInt b)) ->
+       Movq (Immediate a) (MemoryRef var) : Addq (Immediate b) (MemoryRef var) : toselect (xs, blocks)
+
+    Assign (CVar var) (CPlus (CInt a) (CVar b)) ->
+      Movq (Immediate a) (Register "%rax") : Addq (MemoryRef b) (Register "%rax") : toselect (xs, blocks)
+
+    Assign (CVar var) (CPlus (CVar b) (CInt a)) ->
+      Movq (Immediate a) (Register "%rax") : Addq (MemoryRef b) (Register "%rax") : toselect (xs, blocks)
+
+    Assign (CVar var) (CPlus (CVar a) (CVar b)) ->
+      Movq (MemoryRef a) (Register "%rax") : Addq (MemoryRef b) (Register "%rax") : toselect (xs, blocks)
+
+    --
+
+    Assign (CVar var) (CMinus (CInt a) (CInt b)) ->
+       Movq (Immediate a) (MemoryRef var) : Subq (Immediate b) (MemoryRef var) : toselect (xs, blocks)
+
+    Assign (CVar var) (CMinus (CInt a) (CVar b)) ->
+      Movq (Immediate a) (Register "%rax") : Subq (MemoryRef b) (Register "%rax") : toselect (xs, blocks)
+
+    Assign (CVar var) (CMinus (CVar b) (CInt a)) ->
+      Movq (Immediate a) (Register "%rax") : Subq (MemoryRef b) (Register "%rax") : toselect (xs, blocks)
+
+    Assign (CVar var) (CMinus (CVar a) (CVar b)) ->
+      Movq (MemoryRef a) (Register "%rax") : Subq (MemoryRef b) (Register "%rax") : toselect (xs, blocks)
+    
       
     Assign (CVar var) (CEq (CInt a) (CInt b)) ->
       Cmpq (Immediate a) (Immediate b) : Sete (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
 
     Assign (CVar var) (CEq (CVar a) (CVar b)) ->
-      Cmpq (MemoryRef a) (MemoryRef b) : Sete (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
+      Movq (MemoryRef b) (Register "%rax") : (Cmpq (Register "%rax") (MemoryRef a)) : (Sete (Register "%al")) : (Movzbq (Register "%al") (MemoryRef var)) :  toselect (xs, blocks)
 
+    Assign (CVar var) (CEq (CVar a) (CInt b)) ->
+      Cmpq (Immediate b) (MemoryRef a) : Sete (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+
+    Assign (CVar var) (CEq (CInt b) (CVar a)) ->
+      Cmpq (Immediate b) (MemoryRef a) : Sete (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+
+    Assign (CVar var) (CEq (CBool b) (CVar a)) ->
+      let bool = if b == True then 1 else 0 in
+        Cmpq (MemoryRef a) (Immediate bool) : Sete (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+
+    Assign (CVar var) (CEq (CVar a) (CBool b)) ->
+      let bool = if b == True then 1 else 0 in
+        Cmpq (Immediate bool) (MemoryRef a) : Sete (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+
+    Assign (CVar var) (CEq (CBool a) (CBool b)) ->
+      let bool1 = if a == True then 1 else 0 in
+        let bool2 = if b == True then 1 else 0 in
+          Cmpq (Immediate bool2) (Immediate bool1) : Sete (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+                                                                     
     Assign (CVar var) (CNot n) ->
 
       case n of
@@ -68,16 +204,8 @@ toselect ((x:xs), blocks) =
         CBool True ->
           Movq (Immediate 1) (MemoryRef var) : Xorq (Immediate 1) (MemoryRef var) : toselect (xs, blocks)
         _ -> Movq (Immediate 0) (MemoryRef var) : Xorq (Immediate 1) (MemoryRef var) : toselect (xs, blocks) 
-      
-    CLess (CVar var) (CInt n) ->
-      Cmpq (Immediate n) (MemoryRef var) : toselect (xs, blocks)
-     --todo: cgreater
-    Assign (CVar var) (CPlus (CVar var') (CVar var'')) ->
-      Movq (MemoryRef var') (MemoryRef var) : Addq (MemoryRef var'') (MemoryRef var) : toselect (xs, blocks)
-      
-    Assign (CVar var) (CPlus (CVar var') (CInt n)) ->
-      Movq (MemoryRef var') (MemoryRef var) : Addq (Immediate n) (MemoryRef var) : toselect (xs, blocks)
-      
+     
+    
     IfGoto (CVar var) (Goto block) (Goto block') ->
       let blk = Map.lookup block blocks
           blk' = Map.lookup block' blocks
