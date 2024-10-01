@@ -1,4 +1,4 @@
-# rackety
+# lispy
 
 So far, the `ToAnf` module transforms `if` and `let` expressions, while loops, booleans, ints, and comparison operators such as `<,>, and, or, not, eq` to ANF.
 
