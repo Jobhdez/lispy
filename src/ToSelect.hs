@@ -45,16 +45,16 @@ toselect ((x:xs), blocks) =
       Movq (Immediate n) (MemoryRef var) : toselect (xs, blocks)
       
     CPlus (CVar var) (CVar var') ->
-      Movq (MemoryRef var) (Register "%rax") : Addq (Register "%rax") (MemoryRef var') : toselect (xs, blocks)
+      Movq (MemoryRef var) (Register "%rax") : Addq (Register "%rax") (MemoryRef var') : Movq (MemoryRef var') (Register "%rdi") : Callq "print_int" : toselect (xs, blocks)
 
     CPlus (CVar var) (CInt e) ->
-      [Addq (Immediate e) (MemoryRef var)]
+      Addq (Immediate e) (MemoryRef var) : Movq (MemoryRef var) (Register "%rdi") : Callq "print_int" : toselect (xs, blocks)
 
     CPlus (CInt e) (CVar var) ->
-      [Addq (Immediate e) (MemoryRef var)]
+      Addq (Immediate e) (MemoryRef var) : Movq (MemoryRef var) (Register "%rdi") : Callq "print_int" : toselect (xs, blocks)
 
     CPlus (CInt e) (CInt e2) ->
-      Movq (Immediate e) (Register "%rax") : Addq (Immediate e2) (Register "%rax") : toselect (xs, blocks)
+      Movq (Immediate e) (Register "%rax") : Addq (Immediate e2) (Register "%rax") : Movq (Register "%rax") (Register "%rdi") : Callq "print_int" : toselect (xs, blocks)
 
     CMinus (CVar var) (CVar var') ->
       Movq (MemoryRef var) (Register "%rax") : Subq (Register "%rax") (MemoryRef var') : toselect (xs, blocks)
