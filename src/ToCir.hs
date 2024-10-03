@@ -40,16 +40,18 @@ tocir (MLet [(AVar var, AExp (AInt x))] (AExp (AInt y))) =
   [Assign (CVar var) (CInt x), CReturn (CInt y)]
 
 tocir (MLet [(AVar var, AExp (AInt x))] body) =
-  [(Assign (CVar var) (CInt x))] ++ tocir body
+  let body' = tocir body in
+    [(Assign (CVar var) (CInt x))] ++ body'
 
 tocir (MLet [(AVar var, (MLet [(v, exp)] body))] body2) =
   tocir (MLet [(v, exp)] body) ++ [Assign (CVar var) (head (tocir body2))]
 
 tocir (MLet [(AVar var, MLess (AVar x) (AInt y))] body) =
-  [Assign (CVar var) (head (tocir (MLess (AVar x) (AInt y))))] ++ tocir body
+  let body' = tocir body in
+    Assign (CVar var) (head (tocir (MLess (AVar x) (AInt y)))) : body'
 
 tocir (MLet [(AVar var, MLess (AInt y) (AInt z))] body) =
-  [Assign (CVar var) (head (tocir (MLess (AInt y) (AInt z))))] ++ tocir body
+  Assign (CVar var) (head (tocir (MLess (AInt y) (AInt z)))) : tocir body
 
 tocir (MLet [(AVar var, exp)] body) =
   [Assign (CVar var) (head (tocir exp))] ++ tocir body
@@ -128,7 +130,10 @@ tocir (AExp (AInt b)) =
 
 tocir (MIf (AExp (AVar tmp)) thn els) =
   [IfStmt (CVar tmp) (head (tocir thn)) (head (tocir els))]
-  
+
+tocir (MIf cnd thn els) =
+  [IfStmt (head (tocir cnd)) (head(tocir thn)) (head (tocir els))]
+
 tocir (AExp (AVar b)) =
   [CVar b]
 
@@ -144,7 +149,8 @@ tocir (MSetBang (AVar var) exp) =
   [(Assign (CVar var) (head (tocir exp)))]
 
 tocir (MWhileLoop cnd body) =
-  [CWhileLoop (head (tocir cnd)) (head (tocir body))]
+  let body' = (head (tocir body)) in
+    [CWhileLoop (head (tocir cnd)) body']
 
 tocir (MNot (AVar v)) =
   [CNot (CVar v)]
@@ -206,11 +212,17 @@ toc exps = toc' exps 0 Map.empty
       let blockLoop = "loop_" ++ show counter
           blockBody = "block_" ++ show (counter + 1)
           blocks' = Map.insert blockLoop [cnd] blocks
-          blocks'' = Map.insert blockLoop [body] blocks'
+          (body', bodyBlocks') = toc' [body] (counter + 1) Map.empty
+          blocks'' = Map.insert blockLoop body' bodyBlocks'
           exp = IfGotoLoop cnd (Goto blockLoop)
           (restExps, finalBlocks) = toc' xs (counter + 2) blocks''
           in (exp : ys ++ restExps, finalBlocks)
-             
+
+    toc' ((CBegin (x:xs)):ys) counter blocks =
+      let (xcir, xblocks) = toc' [x] counter blocks
+          (restExps, finalBlocks) = toc' xs (counter+1) xblocks
+          in (xcir ++ restExps, finalBlocks)
+          
     toc' (x:xs) counter blocks = 
       let (restExps, finalBlocks) = toc' xs counter blocks
       in (x : restExps, finalBlocks)
