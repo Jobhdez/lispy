@@ -124,8 +124,8 @@ toselect ((x:xs), blocks) =
     Assign (CVar var) (CLess (CInt a) (CVar b)) ->
        Cmpq (MemoryRef b) (Immediate a) : Setl (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
 
-    Assign (CVar var) (CLess (CVar a) (CInt b)) ->
-       Cmpq (Immediate b) (MemoryRef a) : Setl (Register "%al") : (Movzbq (Register "%al") (MemoryRef var)) : toselect (xs, blocks)
+    Assign (CVar var) (CLess (CVar b) (CInt a)) ->
+      Cmpq (Immediate a) (MemoryRef b) : Setl (Register "%al") : Movzbq (Register "%al") (MemoryRef var) : toselect (xs, blocks)
 
     Assign (CVar var) (CLess (CVar a) (CVar b)) ->
       Movq (MemoryRef b) (Register "%rax") : (Cmpq (Register "%rax") (MemoryRef a)) : (Setl (Register "%al")): (Movzbq (Register "%al") (MemoryRef var)) :  toselect (xs, blocks)
@@ -212,10 +212,10 @@ toselect ((x:xs), blocks) =
           blk' = Map.lookup block' blocks
       in case (blk, blk') of
           (Just blkInstrs, Just blk'Instrs) ->
-            Cmpq (Immediate 1) (MemoryRef var) : Je block : Jmp block' : Label block : toselect (blkInstrs, blocks) ++  [Label block'] ++ toselect (blk'Instrs, blocks) ++ toselect (xs, blocks)
+            Cmpq (Immediate 1) (MemoryRef var) : Je block : Jmp block' : Label block : toselect (blkInstrs, blocks) ++ [Jmp "conclusion"] ++  [Label block'] ++ toselect (blk'Instrs, blocks) ++ [Jmp "conclusion"] ++ toselect (xs, blocks)
           _ -> error "Block not found"
           
-    CInt n -> Movq (Immediate n) (Register "%rax") : Callq "print_int" : toselect (xs, blocks)
+    CInt n -> Movq (Immediate n) (Register "%rdi") : Callq "print_int" : toselect (xs, blocks)
 
     CVar var -> Movq (MemoryRef var) (Register "%rdi") : Callq "print_int" : toselect (xs, blocks)
 
