@@ -74,6 +74,17 @@ toStack' ((Addq (Register reg) (MemoryRef ref)):xs) counter hashmap =
   in
     (Addq (Register reg) (MemoryRef stacklocation) : rest, finalCounter)
 
+toStack' ((Addq (Immediate e) (MemoryRef ref)):xs) counter hashmap =
+  let (stacklocation, counter', hashmap') =
+        if Map.member ref hashmap
+        then (hashmap Map.! ref, counter, hashmap)
+        else let counter' = counter + 8
+                 stacklocation' = "-" ++ show counter' ++ "(%rbp)"
+                 hashmap' = Map.insert ref stacklocation' hashmap
+             in  (stacklocation', counter', hashmap')
+      (rest, finalCounter) = toStack' xs counter' hashmap'
+  in
+    (Addq (Immediate e) (MemoryRef stacklocation) : rest, finalCounter)
     
 toStack' (x:xs) counter hashmap =
   let (rest, finalCounter) = toStack' xs counter hashmap
