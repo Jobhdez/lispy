@@ -7,12 +7,14 @@ import ToCir
 import ToSelect
 import ToStack
 
+import qualified Data.Map as Map
+
 tox86 :: ([Instruction], Int) -> String
 tox86 (ins, stack) =
   let prelude = makeprelude stack
       conclusion = makeconclusion stack
   in
-    prelude ++ tox86' ins ++ conclusion
+    prelude ++ tox86' (patch ins Map.empty) ++ conclusion
     
 tox86' :: [Instruction] -> String
 tox86' [] = ""
@@ -35,6 +37,9 @@ tox86' ((Addq (Register reg) (MemoryRef ref)):xs) =
 tox86' ((Movq (Immediate e) (Register reg)):xs) =
   "\tmovq " ++ "$" ++ show e ++ ", " ++ reg ++ "\n" ++ tox86' xs
 
+tox86' ((Cmpq (Immediate e) (Register reg)):xs) =
+  "\tcmpq " ++ "$" ++ show e ++ ", " ++ reg ++ "\n" ++ tox86' xs
+
 tox86' ((Addq (Immediate e) (Register reg)):xs) =
   "\taddq " ++ "$" ++ show e ++ ", " ++ reg ++ "\n" ++ tox86' xs
 
@@ -47,11 +52,24 @@ tox86' ((Cmpq (Immediate e) (MemoryRef ref)):xs) =
 tox86' ((Jl block):xs) =
   "\tjl " ++ block ++ "\n" ++ tox86' xs
 
+tox86' ((Je block):xs) =
+  "\tje " ++ block ++ "\n" ++ tox86' xs
+
 tox86' ((Callq fn):xs) =
   "\tcallq " ++ fn ++ "\n" ++ tox86' xs
 
 tox86' ((Addq (Immediate e) (MemoryRef ref)):xs) =
   "\taddq " ++ "$" ++ show e ++ ", " ++ ref ++ "\n" ++ tox86' xs
+
+tox86' ((Setl (Register reg)):xs) =
+  "\tsetl " ++ reg ++ "\n" ++ tox86' xs
+
+tox86' ((Movzbq (Register reg) (Register reg2)):xs) =
+  "\tmovzbq " ++ reg ++ ", " ++ reg2 ++ "\n" ++ tox86' xs
+
+tox86' ((Jmp block):xs) =
+  "\tjmp " ++ block ++ "\n" ++ tox86' xs
+
 
 makeprelude :: Int -> String
 makeprelude stack =
@@ -64,3 +82,19 @@ makeconclusion stack =
   let alignment = if (mod stack 16) == 0 then stack else stack + 8
   in
     "\nconclusion:\n" ++ "\taddq $" ++ show alignment ++ ", " ++ "%rsp\n"  ++ "\tpopq %rbp\n" ++ "\tretq"
+
+patch :: [Instruction] -> Map.Map String String -> [Instruction]
+patch [] _ = []
+  
+patch ((Movzbq (Register reg) (MemoryRef ref)):xs) hash =
+  let updatedHash = Map.insert ref "%rsi" hash in
+    Movzbq (Register reg) (Register "%rsi") : patch xs updatedHash
+    
+patch ((Cmpq (Immediate e) (MemoryRef ref)):xs) hash =
+  if Map.member ref hash 
+    then Cmpq (Immediate e) (Register (hash Map.! ref)) : patch xs hash
+    else Cmpq (Immediate e) (MemoryRef ref) : patch xs hash
+
+patch (x:xs) hash = 
+  x : patch xs hash
+  
