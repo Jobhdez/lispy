@@ -23,8 +23,13 @@ writeToFile  filePath content = do
 
 main :: IO ()
 main = do
+  let asm = compile "(let ((i 0)) (if (< i 3) 3 4))" in
+    writeToFile "ifeg.s" asm
+{--
+main = do
   let asm = compile "(let ((x 3)) (let ((y 4)) (+ x y)))" in
     writeToFile "egsumvar.s" asm
+--}
 {--
 main = do
   let asm = compile "(+ 3 4)" in
