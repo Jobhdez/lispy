@@ -35,6 +35,12 @@ tox86' ((Addq (Register reg) (MemoryRef ref)):xs) =
 tox86' ((Movq (Immediate e) (Register reg)):xs) =
   "\tmovq " ++ "$" ++ show e ++ ", " ++ reg ++ "\n" ++ tox86' xs
 
+tox86' ((Addq (Immediate e) (Register reg)):xs) =
+  "\taddq " ++ "$" ++ show e ++ ", " ++ reg ++ "\n" ++ tox86' xs
+
+tox86' ((Movq (Register reg) (Register reg2)):xs) =
+  "\tmovq " ++ reg ++ ", " ++ reg2 ++ "\n" ++ tox86' xs
+  
 tox86' ((Cmpq (Immediate e) (MemoryRef ref)):xs) =
   "\tcmpq " ++ "$" ++ show e ++ ", " ++ ref ++ "\n" ++ tox86' xs
 
@@ -43,6 +49,9 @@ tox86' ((Jl block):xs) =
 
 tox86' ((Callq fn):xs) =
   "\tcallq " ++ fn ++ "\n" ++ tox86' xs
+
+tox86' ((Addq (Immediate e) (MemoryRef ref)):xs) =
+  "\taddq " ++ "$" ++ show e ++ ", " ++ ref ++ "\n" ++ tox86' xs
 
 makeprelude :: Int -> String
 makeprelude stack =
