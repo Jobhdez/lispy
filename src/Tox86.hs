@@ -10,6 +10,14 @@ import ToStack
 import qualified Data.Map as Map
 
 tox86 :: ([Instruction], Int) -> String
+tox86 (((Label "garbage"):xs), stack) =
+  let prelude = makeprelude stack in
+    let tuppre = tox86' [Movq (Immediate 65536) (Register "%rdi"), Movq (Immediate 65536) (Register "%rsi"), Callq "initialize", Movq (MemoryRef "rootstack_begin(%rip)") (Register "%r15"), Movq (Immediate 0) (MemoryRef "0(%r15)"), Addq (Immediate 8) (Register "%r15")] in
+      let conclusion = makeconclusion stack in
+        let tupconclusion = "\tsubq $8, %r15\n" in
+          prelude ++ tuppre ++ tox86' (patch ((Label "garbage"):xs) Map.empty) ++ tupconclusion ++ conclusion 
+        
+  
 tox86 (ins, stack) =
   let prelude = makeprelude stack
       conclusion = makeconclusion stack
@@ -45,6 +53,9 @@ tox86' ((Addq (Immediate e) (Register reg)):xs) =
 
 tox86' ((Movq (Register reg) (Register reg2)):xs) =
   "\tmovq " ++ reg ++ ", " ++ reg2 ++ "\n" ++ tox86' xs
+
+tox86' ((Cmpq (Register reg) (Register reg2)):xs) =
+  "\tcmpq " ++ reg ++ ", " ++ reg2 ++ "\n" ++ tox86' xs
   
 tox86' ((Cmpq (Immediate e) (MemoryRef ref)):xs) =
   "\tcmpq " ++ "$" ++ show e ++ ", " ++ ref ++ "\n" ++ tox86' xs
