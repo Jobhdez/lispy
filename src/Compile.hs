@@ -42,8 +42,22 @@ main = do
   let asm = compile "(let ((i 3)) (+ i 4))" in
     writeToFile "eg.s" asm
  --}   
-
+{--
 main = do
   let asm = compile "(let ((sum 0)) (let ((i 0)) (begin (while (< i 5) (begin (set sum (+ sum i)) (set i (+ i 1)))) sum)))" in
     writeToFile "example2.s" asm
+--}
 
+main = do
+  let asm = compile "(let ((tup (vector 1 2 3))) (vectorref tup 2))" in
+    writeToFile "tup.s" asm
+{--
+--- this program does not run yet
+main = do
+  let asm = compile "(let ((tup (vector 1 2 3))) (let ((i 3)) (+ i (vectorref tup 0))))" in
+    writeToFile "tupsum.s" asm
+--}
+
+{-- programs to eventually compile:
+1. (let ((sum 0)) (let ((i 0)) (let ((tup (vector 1 2 3 5))) (begin (while (< i 4) (begin (set sum (+ sum (vectorref tup i))) (set i (+ i 1)))) sum))))"
+--}
