@@ -14,6 +14,18 @@ toStack ins =
 toStack' :: [Instruction] -> Int -> Map.Map String String -> ([Instruction], Int)
 toStack' [] counter _ = ([], counter)
 
+toStack' ((Movq (MemoryRef "free_ptr(%rip)") reg):xs) counter hashmap =
+  let (rest, finalCounter) = toStack' xs counter hashmap in
+    (Movq (MemoryRef "free_ptr(%rip)") reg : rest, finalCounter)
+
+toStack' ((Movq (MemoryRef "fromspace_end(%rip)") reg):xs) counter hashmap =
+  let (rest, finalCounter) =  toStack' xs counter hashmap in
+    (Movq (MemoryRef "fromspace_end(%rip)") reg : rest, finalCounter)
+
+toStack' ((Addq imm (MemoryRef "free_ptr(%rip)")):xs) counter hashmap =
+  let (rest, finalCounter) =  toStack' xs counter hashmap in
+    (Addq imm (MemoryRef "free_ptr(%rip)") : rest, finalCounter)
+  
 toStack' ((Movq (Immediate e) (MemoryRef ref)):xs) counter hashmap =
   let (stacklocation, counter', hashmap') =
         if Map.member ref hashmap
