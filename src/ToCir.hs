@@ -11,18 +11,28 @@ data Goto = Goto String deriving Show
 data Cir =
   CInt Int
   | CVar String
+  | CGlobalValue String
+  | CCollect Int
   | CBool Bool
   | CPlus Cir Cir
   | CMinus Cir Cir
+  | CAddt Cir Int
   | CReturn Cir
   | CLess Cir Cir
   | CEq Cir Cir
+  | CLesst Cir Cir
+  | CVoid String
   | CGreater Cir Cir
   | CNot Cir
   | IfStmt Cir Cir Cir
   | IfGoto Cir Goto Goto
-  | Assign Cir Cir 
+  | Assign Cir Cir
+  | CTup [Cir]
   | CBegin [Cir]
+  | CVecSet String Int Cir
+  | CDefine String Cir
+  | CAllocate Int
+  | CTupRef Cir Int
   | IfGotoLoop Cir Goto
   | CWhileLoop Cir Cir deriving Show
 
@@ -131,6 +141,9 @@ tocir (AExp (AInt b)) =
 tocir (MIf (AExp (AVar tmp)) thn els) =
   [IfStmt (CVar tmp) (head (tocir thn)) (head (tocir els))]
 
+tocir (MIf (MLesst (MAddt (MGlobalValue ptr) bytes) (MGlobalValue from)) (Void v) (Collect n)) =
+  [IfStmt (CLesst (CAddt (CGlobalValue ptr) bytes) (CGlobalValue from)) (CVoid v) (CCollect n)]
+
 tocir (MIf cnd thn els) =
   [IfStmt (head (tocir cnd)) (head(tocir thn)) (head (tocir els))]
 
@@ -157,6 +170,23 @@ tocir (MNot (AVar v)) =
   
 tocir (MNot (ABool b)) =
   [CNot (CBool b)]
+
+tocir (MTuple defs) =
+  [CTup (defstocir defs)]
+  where
+    defstocir :: [MonExp] -> [Cir]
+    defstocir [] = []
+    defstocir (x:xs) =
+      tocir x ++ defstocir xs
+      
+tocir (MonVec name index num) =
+ [CVecSet name index (head (tocir num))]
+
+tocir (Define name (Allocate n)) =
+  [CDefine name (CAllocate n)]
+
+tocir (MTupRef tup index) =
+  [CTupRef (head (tocir tup)) index]
   
 tocir' :: [Cir] -> [Cir]
 tocir' [] = []
