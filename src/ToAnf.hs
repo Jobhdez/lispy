@@ -11,18 +11,27 @@ data MonExp =
   AExp AtomicExp
   | MIf MonExp MonExp MonExp
   | MNot AtomicExp
+  | MGlobalValue String
+  | Collect Int
+  | Allocate Int
+  | Define String MonExp
+  | MonVec String Int MonExp
   | MLess AtomicExp AtomicExp
   | MGreater AtomicExp AtomicExp
   | MPlus AtomicExp AtomicExp
   | MMinus AtomicExp AtomicExp
+  | MLesst MonExp MonExp
+  | MAddt MonExp Int
   | MEq AtomicExp AtomicExp
   | MNegative AtomicExp
   | MSetBang AtomicExp MonExp
   | MBegin [MonExp]
   | MWhileLoop MonExp MonExp
+  | MTuple [MonExp]
+  | MTupRef MonExp Int
   | Void String
   | MLet [(AtomicExp, MonExp)] MonExp deriving Show
-
+            
 toanf :: Exp -> MonExp
 toanf exp =
   toanf' exp 0
@@ -141,6 +150,19 @@ toanf exp =
 
     toanf' (While cnd exp) counter =
       MWhileLoop (toanf' cnd (counter+1)) (toanf' exp (counter+1))
+
+    toanf' (Vector entries) counter =
+      MTuple defs
+      where
+        defs = toTup (Vector entries) 0
+
+    toanf' (VectorRef vec index) counter =
+      MTupRef tuple index
+      where
+        tuple = toanf' vec counter
+      
+      
+      
             
 isatomic :: Exp -> Bool
 isatomic (Bool b) = True
@@ -159,3 +181,19 @@ toatomic (Var n) =
  (AVar n)
              
 
+toTup :: Exp -> Int -> [MonExp]
+toTup (Vector entries) counter =
+  let bytes = (length entries) * 8 in
+    let alignment = if (mod bytes 16) == 0 then bytes else bytes + 8 in
+      let vectorname = "vector_" ++ show counter in
+        let defexps = makedefs entries 0 vectorname in
+          let inner = Define vectorname (Allocate (length entries)) : defexps  in
+            (MIf (MLesst (MAddt (MGlobalValue "free_ptr") alignment) (MGlobalValue "fromspace_end")) (Void "void") (Collect alignment)) : inner
+  where
+    makedefs :: [Exp] -> Int -> String -> [MonExp]
+    makedefs [] _ _ = []
+    makedefs (x:xs) counter name =
+      (MonVec name counter (toanf x)) : rest
+      where
+        rest = makedefs xs (counter+1) name
+            
